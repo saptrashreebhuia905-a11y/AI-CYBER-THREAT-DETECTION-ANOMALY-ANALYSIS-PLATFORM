@@ -1,121 +1,119 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
 
+const API_URL = 'http://127.0.0.1:8000/api/v1/alerts'
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [alerts, setAlerts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchAlerts() {
+      try {
+        const res = await fetch(API_URL)
+        const data = await res.json()
+        setAlerts(data.alerts || [])
+      } catch (error) {
+        console.error('Failed to fetch alerts:', error)
+        setAlerts([
+          {
+            source_ip: '203.0.113.88',
+            user_id: 'admin_root',
+            endpoint: '/api/v1/admin',
+            risk_score: 92,
+            severity: 'CRITICAL',
+            reasons: ['Brute-force password attack detected', 'Extreme traffic spike'],
+          },
+          {
+            source_ip: '198.51.100.44',
+            user_id: 'user_102',
+            endpoint: '/api/v1/login',
+            risk_score: 68,
+            severity: 'HIGH',
+            reasons: ['High request rate / possible DDoS attack'],
+          },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAlerts()
+  }, [])
+
+  const summary = {
+    total: alerts.length,
+    critical: alerts.filter((alert) => alert.severity === 'CRITICAL').length,
+    high: alerts.filter((alert) => alert.severity === 'HIGH').length,
+    medium: alerts.filter((alert) => alert.severity === 'MEDIUM').length,
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <div className="cyber-dashboard">
+      <header className="topbar">
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+          <p className="eyebrow">Cybersecurity Intelligence</p>
+          <h1>AI Threat Detection Platform</h1>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+        <button className="primary-btn">Live Monitoring</button>
+      </header>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      <section className="stats-grid">
+        <div className="stat-card danger">
+          <span>Total Events</span>
+          <strong>{summary.total}</strong>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+        <div className="stat-card warning">
+          <span>Critical</span>
+          <strong>{summary.critical}</strong>
+        </div>
+        <div className="stat-card alert">
+          <span>High Risk</span>
+          <strong>{summary.high}</strong>
+        </div>
+        <div className="stat-card safe">
+          <span>Medium</span>
+          <strong>{summary.medium}</strong>
         </div>
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <section className="alerts-panel">
+        <h2>Recent Threat Alerts</h2>
+
+        {loading ? (
+          <p>Loading alerts...</p>
+        ) : alerts.length === 0 ? (
+          <p>No alerts detected.</p>
+        ) : (
+          <div className="alert-list">
+            {alerts.map((alert, index) => (
+              <div
+                key={`${alert.source_ip}-${index}`}
+                className={`alert-item ${alert.severity?.toLowerCase() || 'low'}`}
+              >
+                <div className="alert-header">
+                  <div>
+                    <span className="badge">{alert.severity || 'LOW'}</span>
+                    <h3>{alert.endpoint || 'Unknown endpoint'}</h3>
+                  </div>
+                  <strong>{alert.risk_score || 0}</strong>
+                </div>
+
+                <p>
+                  <b>User:</b> {alert.user_id}
+                </p>
+                <p>
+                  <b>IP:</b> {alert.source_ip}
+                </p>
+                <p>
+                  <b>Reasons:</b> {alert.reasons?.join(', ') || 'No reason provided'}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
   )
 }
 
