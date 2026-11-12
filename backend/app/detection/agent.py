@@ -35,6 +35,7 @@ def _ensure_model_exists():
 
     try:
         from sklearn.ensemble import IsolationForest
+
         import pandas as pd
 
         df = pd.DataFrame(_build_default_training_data())
