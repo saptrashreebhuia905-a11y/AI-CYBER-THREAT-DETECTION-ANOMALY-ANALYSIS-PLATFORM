@@ -1,16 +1,18 @@
-import requests, time
+import os
 
-API_URL = "http://127.0.0.1:8000/api/v1/logs"
-for i in range(15):
-    payload = {
-        "timestamp": "2026-10-20T15:00:00Z",
-        "source_ip": "198.51.100.44",
-        "user_id": "admin_root",
-        "endpoint": "/api/v1/admin",
-        "request_rate": 250,
-        "login_status": "FAILED",
-        "failed_attempts": 8
-    }
-    requests.post(API_URL, json=payload)
-    time.sleep(0.2)
-print("Attack simulated!")
+import requests
+
+API_URL = "http://127.0.0.1:8000/api/v1/simulator/run"
+API_TOKEN = os.getenv("SENTINEL_API_TOKEN")
+
+if not API_TOKEN:
+    raise SystemExit("Set SENTINEL_API_TOKEN to a valid Sentinel bearer token before running the simulator.")
+
+response = requests.post(
+    API_URL,
+    json={"scenario": "brute_force", "event_count": 15},
+    headers={"Authorization": f"Bearer {API_TOKEN}"},
+    timeout=15,
+)
+response.raise_for_status()
+print(f"Created {response.json()['events_created']} synthetic brute-force test events in the local database.")
